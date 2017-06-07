@@ -49,21 +49,26 @@ func (a RangeList) Len() int           { return len(a) }
 func (a RangeList) Less(i, j int) bool { return a[i].first < a[j].first } // decreasing order
 func (a RangeList) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
-func (a RangeList) Clean() RangeList {
-	sort.Sort(a)
-	b := RangeList{a[0]}
-	n := len(a)
-	for i := 1; i < n; i++ {
-		v := a[i]
-		top := b[len(b)-1]
-
-		if top.last >= v.first || top.last+1 == v.first {
-			if v.last > top.last {
-				b[len(b)-1].last = v.last
+func (rlp *RangeList) SortAndMerge() {
+	rl := *rlp
+	if len(rl) <= 1 {
+		return
+	}
+	sort.Sort(rl)
+	w := 0
+	for r := 1; r < len(rl); r++ {
+		last, current := rl[w], rl[r]
+		if last.last+1 >= current.first {
+			// overlapping ranges, merge
+			if current.last > last.last {
+				last.last = current.last
+				rl[w] = last
 			}
 		} else {
-			b = append(b, v)
+			// no overlap, add new
+			w++
+			rl[w] = current
 		}
 	}
-	return b
+	*rlp = rl[:w+1]
 }
